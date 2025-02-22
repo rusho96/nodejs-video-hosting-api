@@ -171,7 +171,7 @@ const getVideoById = asyncHandler(async (req, res) => {
     return res
     .status(200)
     .json(
-         new ApiResponse(200,"video has been fetched")
+         new ApiResponse(200,video,"video has been fetched")
     )
     
 })

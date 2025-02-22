@@ -73,12 +73,11 @@ const getUserPlaylists = asyncHandler(async(req,res)=>{
 
     ])
 
-    console.log(playlist)
 
     return res
     .status(200)
     .json(
-        new ApiResponse(200,"Playlists are fetched successfully")
+        new ApiResponse(200,playlist,"Playlists are fetched successfully")
     )
     
 })
@@ -112,12 +111,12 @@ const getPlaylistById = asyncHandler(async(req,res)=>{
         }
     ])
 
-    console.log(playlistDetail)
+    //console.log(playlistDetail)
     
     return res
     .status(200)
     .json(
-        new ApiResponse(200,"PlaylistDetail has fetched successfully")
+        new ApiResponse(200,playlistDetail,"PlaylistDetail has fetched successfully")
     )
 })
 

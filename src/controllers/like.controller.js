@@ -156,7 +156,6 @@ const likedVideos = await Like.aggregate([
 
 ])
 
-//console.log(likedVideos)
 
 return res
 .status(200)

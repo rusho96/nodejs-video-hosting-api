@@ -85,7 +85,6 @@ const addComment = asyncHandler(async(req,res)=>{
         owner:req.user._id
     })
 
-    console.log(newComment)
 
     return res
     .status(200)
@@ -113,7 +112,7 @@ const updateComment = asyncHandler(async(req,res)=>{
     if(!isCommentExist){
         throw new ApiError(404,"No comment is found")
     }
-    //console.log(req.body)
+    
     if(isCommentExist?.owner.toString() !== req.user._id.toString()){
         throw new ApiError(404,"You can not edit this")
     }
@@ -123,8 +122,6 @@ const updateComment = asyncHandler(async(req,res)=>{
         {$set:{content:content}},
         {new:true}
     )
-
-    console.log(updatedComment)
 
     return res
     .status(200)
@@ -159,7 +156,6 @@ const deleteComment = asyncHandler(async(req,res)=>{
         commentId
     )
 
-    console.log(deletedComment)
 
     return res
     .status(200)

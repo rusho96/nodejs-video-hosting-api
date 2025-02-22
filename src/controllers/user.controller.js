@@ -222,7 +222,7 @@ const logoutUser = asyncHandler(async(req,res)=>{
     .clearCookie("refreashToken",option)
     .clearCookie("accessToken",option)
     .json(
-        new ApiResponse(200,{},"logged out successfully")
+        new ApiResponse(200,changedUser,"logged out successfully")
     )
 
 })
@@ -412,7 +412,7 @@ const getCurrentChannelProfile = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"User channel is not exist")
     }
 
-    console.log(channel)
+    //console.log(channel)
 
     res
     .status(200)
