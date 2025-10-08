@@ -1,5 +1,4 @@
 # Local changes
 node_modules/
-
-# Remote changes
 .env
+# Remote changes

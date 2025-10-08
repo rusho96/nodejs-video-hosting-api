@@ -15,7 +15,6 @@ const videoSchema = new Schema({
      },
      thumbnail:{
         type:String,
-        required:true
      },
      thumbnailId:{
         type:String

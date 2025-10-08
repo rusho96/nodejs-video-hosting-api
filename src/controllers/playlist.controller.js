@@ -84,13 +84,13 @@ const getUserPlaylists = asyncHandler(async(req,res)=>{
 
 const getPlaylistById = asyncHandler(async(req,res)=>{
 
-    const {plalistId} = req.params
+    const {playlistId} = req.params
 
-    if(!isValidObjectId(plalistId)){
+    if(!isValidObjectId(playlistId)){
         throw new ApiError(404,"Invalid playlistId")
     }
 
-    const existPlaylist = await Playlist.findById(plalistId)
+    const existPlaylist = await Playlist.findById(playlistId)
 
     if(!existPlaylist){
         throw new ApiError(400,"PLaylist does not exist")
@@ -98,18 +98,70 @@ const getPlaylistById = asyncHandler(async(req,res)=>{
 
     const playlistDetail = await Playlist.aggregate([
         {
-            $match: new mongoose.Types.ObjectId(plalistId)
+            $match: { _id: new mongoose.Types.ObjectId(playlistId) }
         },
         {
-            $lookup:{
-                from:"Video",
-                localField:"videos",
-                foreignField:"_id",
-                as:"playlistVideos"
-
+            $lookup: {
+                from: "videos",    
+                localField: "videos",
+                foreignField: "_id",
+                as: "playlistVideos"
+            }
+        },
+        {
+            $unwind: {
+                path: "$playlistVideos",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $lookup: {
+                from: "users",   
+                localField: "playlistVideos.owner",
+                foreignField: "_id",
+                as: "playlistVideos.owner"
+            }
+        },
+        {
+            $unwind: {
+                path: "$playlistVideos.owner",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $group: {
+                _id: "$_id",
+                name: { $first: "$name" },
+                description: { $first: "$description" },
+                owner: { $first: "$owner" },
+                createdAt: { $first: "$createdAt" },
+                updatedAt: { $first: "$updatedAt" },
+                playlistVideos: { $push: "$playlistVideos" }
+            }
+        },
+        {
+            $project: {
+                name: 1,
+                description: 1,
+                owner: 1,
+                createdAt: 1,
+                updatedAt: 1,
+                playlistVideos: {
+                    _id: 1,
+                    title: 1,
+                    description: 1,
+                    thumbnail: 1,
+                    duration: 1,
+                    views: 1,
+                    createdAt: 1,
+                    "owner._id": 1,
+                    "owner.userName": 1,
+                    "owner.avatar": 1
+                }
             }
         }
     ])
+
 
     //console.log(playlistDetail)
     
@@ -123,7 +175,7 @@ const getPlaylistById = asyncHandler(async(req,res)=>{
 const addVideoToPlaylist = asyncHandler(async(req,res)=>{
 
 
-    const {plalistId,videoId} = req.params
+    const {playlistId,videoId} = req.params
 
     const {name,description} = req.body
 
@@ -137,7 +189,7 @@ const addVideoToPlaylist = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Video does not exist")
     }
     
-    if(!isValidObjectId(plalistId)){
+    if(!isValidObjectId(playlistId)){
         throw new ApiError(404,"Invalid plalistId")
     }
 
@@ -146,7 +198,7 @@ const addVideoToPlaylist = asyncHandler(async(req,res)=>{
 
     const updatedPlaylist = await Playlist.findOneAndUpdate(
         {
-            _id:plalistId,
+            _id:playlistId,
             owner:userId
         },
         
@@ -177,7 +229,7 @@ const addVideoToPlaylist = asyncHandler(async(req,res)=>{
 })
 
 const removeVideFromPlaylist = asyncHandler(async(req,res)=>{
-    const {plalistId,videoId} = req.params
+    const {playlistId,videoId} = req.params
 
     const {name,description} = req.body
 
@@ -191,7 +243,7 @@ const removeVideFromPlaylist = asyncHandler(async(req,res)=>{
         throw new ApiError(400,"Video does not exist")
     }
     
-    if(!isValidObjectId(plalistId)){
+    if(!isValidObjectId(playlistId)){
         throw new ApiError(404,"Invalid plalistId")
     }
 
@@ -199,7 +251,7 @@ const removeVideFromPlaylist = asyncHandler(async(req,res)=>{
     
     const updatedPlaylist = await Playlist.findOneAndUpdate(
         {
-            _id:plalistId,
+            _id:playlistId,
             owner:userId
         },
         {
@@ -230,15 +282,15 @@ const removeVideFromPlaylist = asyncHandler(async(req,res)=>{
 
 const deletePlaylist = asyncHandler(async(req,res)=>{
 
-    const {plalistId} = req.params
+    const {playlistId} = req.params
 
-    if(!isValidObjectId(plalistId)){
+    if(!isValidObjectId(playlistId)){
         throw new ApiError(404,"Invalid plalistId")
     }
     
     const userId =new mongoose.Types.ObjectId(req.user._id);
     
-    const playlist = await Playlist.findOne(plalistId)
+    const playlist = await Playlist.findOne(playlistId)
 
     if(playlist.owner !== userId){
         throw new ApiError(400,"Unauthorised action")

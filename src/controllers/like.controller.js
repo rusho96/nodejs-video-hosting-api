@@ -50,12 +50,12 @@ const toggleVideoLike = asyncHandler(async(req,res)=>{
 
     if(isVideoLiked.length === 0){
         const newLike = await like()
-        console.log(`user ${req.user.fullName} liked the video ${videoId}`)
+        //console.log(`user ${req.user.fullName} liked the video ${videoId}`)
     }
     
     else{
         const deletedLike = await unLike()
-        console.log(`user ${req.user.fullName} unlike the video ${videoId}`)
+        //console.log(`user ${req.user.fullName} unlike the video ${videoId}`)
     }
     
     return res
@@ -105,12 +105,12 @@ const toggleCommentLike = asyncHandler(async(req,res)=>{
     
     if(isCommentLiked.length===0){
         const newLike = await like()
-        console.log(`user ${req.user.fullName} liked the comment ${commentId}`)
+       // console.log(`user ${req.user.fullName} liked the comment ${commentId}`)
     }
 
     else{
         const deletedLike = await unlike()
-        console.log(`user ${req.user.fullName} disliked the comment ${commentId}`)
+        //console.log(`user ${req.user.fullName} disliked the comment ${commentId}`)
     }
 
     return res
@@ -165,6 +165,82 @@ return res
     
 })
 
+const getVideoLikeCount = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId");
+    }
+
+    const existVideo = await Video.findById(videoId);
+    if (!existVideo) {
+        throw new ApiError(404, "Video not found");
+    }
+
+    
+    const likeCount = await Like.countDocuments({ video: videoId });
+
+    return res.status(200).json(
+        new ApiResponse(
+            200,
+            { videoId, likeCount },
+            "Video like count fetched successfully"
+        )
+    );
+});
+
+const getVideoLikers = asyncHandler(async (req, res) => {
+    const { videoId } = req.params;
+
+    if (!isValidObjectId(videoId)) {
+        throw new ApiError(400, "Invalid videoId");
+    }
+
+    const existVideo = await Video.findById(videoId);
+    if (!existVideo) {
+        throw new ApiError(404, "Video not found");
+    }
+const likers = await Like.aggregate([
+        {
+            $match: { video: new mongoose.Types.ObjectId(videoId) },
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "likedBy",
+                foreignField: "_id",
+                as: "userInfo",
+            },
+        },
+        { $unwind: "$userInfo" },
+        {
+            $project: {
+                _id: 0,
+                user: {
+                    userId: "$userInfo._id",
+                    fullName: "$userInfo.fullName",
+                    userName: "$userInfo.userName",
+            
+                },
+            },
+        },
+        { $sort: { createdAt: -1 } },
+    ]);
+
+    
+
+    
+    
+
+    return res.status(200).json(
+        new ApiResponse(200,    
+           likers,
+            "Video likers fetched successfully"
+        )
+    );
+});
+
+
 //getLikedComment lekha hoynai
 
-export {toggleVideoLike,toggleCommentLike,getAllLikedVideos}
+export {toggleVideoLike,toggleCommentLike,getAllLikedVideos,getVideoLikeCount,getVideoLikers}

@@ -9,8 +9,9 @@ import { User } from "../models/user.model.js";
 
 const toggleSubscription = asyncHandler(async (req, res) => {
     const { channelId } = req.params;
+    let data = null
 
-    // Function to subscribe the user to a channel
+    
     const subscribe = async () => {
         const newSubscription = await Subscription.create({
             channel: channelId,
@@ -19,7 +20,7 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         return newSubscription;
     };
 
-    // Function to unsubscribe the user from a channel
+    
     const unsubscribe = async () => {
         const deletedSubscription = await Subscription.deleteOne({
             channel: channelId,
@@ -28,53 +29,59 @@ const toggleSubscription = asyncHandler(async (req, res) => {
         return deletedSubscription.deletedCount;
     };
 
-    // Check if channelId is provided
+    
     if (!channelId) {
         throw new ApiError(404, "ChannelId is required");
     }
 
-    // Validate if channelId is a valid ObjectId
+    
     if (!isValidObjectId(channelId)) {
         throw new ApiError(400, "Invalid channelId");
     }
 
-    // Retrieve the channel profile
+    
     const channelProfile = await User.findById(channelId).select("-password -refreshToken");
 
-    // Check if channel profile exists
+    
     if (!channelProfile) {
         throw new ApiError(404, "No channel found");
     }
 
-    // Check if the user is already subscribed
+    
     const isSubscribedInfo = await Subscription.findOne({
         channel: channelId,
         subscriber: req.user
     });
 
+    console.log( `info ${isSubscribedInfo}`)
+
     if (!isSubscribedInfo) {
-        // If not subscribed, subscribe the user
-        const newSubscription = await subscribe(); // Assuming subscribe() handles errors internally
-        console.log(`Subscribed user ${req.user} to channel ${channelId}`);
+        
+        
+        const newSubscription = await subscribe(); 
+        //console.log(`Subscribed user ${req.user} to channel ${channelId}`);
+        data =true
+        
     } else {
-        // If subscribed, unsubscribe the user
-        const deletedCount = await unsubscribe(); // Assuming unsubscribe() handles errors internally
-        console.log(`Unsubscribed user ${req.user} from channel ${channelId}, deletedCount: ${deletedCount}`);
+        
+        const deletedCount = await unsubscribe(); 
+        //console.log(`Unsubscribed user ${req.user} from channel ${channelId}, deletedCount: ${deletedCount}`);
+        data=false
     }
 
-    // Send success response
-    return res.status(200).json(new ApiResponse(200, "Subscription toggled successfully"));
+    
+    return res.status(200).json(new ApiResponse(200, data));
 });
 
 const getChannelSubscribers = asyncHandler(async(req,res)=>{ 
     const { channelId } = req.params;
 
-    // Check if channelId is provided
+    
     if (!channelId) {
         throw new ApiError(404, "ChannelId is required");
     }
 
-    // Validate if channelId is a valid ObjectId
+    
     if (!isValidObjectId(channelId)) {
         throw new ApiError(400, "Invalid channelId");
     }
@@ -105,17 +112,11 @@ const getChannelSubscribers = asyncHandler(async(req,res)=>{
             {
                 $unwind:"$subscribers"
             },
-            //{
-                //$group:{
-                    //_id:"$subscriber",
-                    //subscribers:{$first:"$subscribers"}
-                //}
-            //}
-
+            
             { 
                 $project:{
-                  _id: 0,                 // Exclude _id if not needed
-                  subscriberId: "$subscriber", // Include subscriber ID
+                  _id: 0,                 
+                  subscriberId: "$subscriber", 
                   subscriberDetails: {
                       userName: "$subscribers.userName",
                       fullName: "$subscribers.fullName"
@@ -134,12 +135,12 @@ const getChannelSubscribers = asyncHandler(async(req,res)=>{
 const getSubscribedToChannels = asyncHandler(async(req,res)=>{
     const { channelId } = req.params;
 
-    // Check if channelId is provided
+    
     if (!channelId) {
         throw new ApiError(404, "ChannelId is required");
     }
 
-    // Validate if channelId is a valid ObjectId
+    
     if (!isValidObjectId(channelId)) {
         throw new ApiError(400, "Invalid channelId");
     }
@@ -174,7 +175,8 @@ const getSubscribedToChannels = asyncHandler(async(req,res)=>{
                     subscribedToChannelId:"$channel",
                     subscribedToChannelDetail:{
                         userName:"$channels.userName",
-                        fullName:"$channels.fullName"
+                        fullName:"$channels.fullName",
+                        profilePic:"$channels.profilePic"
                     }
                 }
             }

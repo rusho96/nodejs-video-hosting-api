@@ -7,11 +7,12 @@ import multer from "multer";
 
 
 const app=express();
-//const upload = multer();
 
+
+const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
 app.use(cors({
-    origin:"http://192.168.0.105:8000",
-    methods: ['GET', 'POST', 'PUT', 'DELETE'],
+    origin:CLIENT_URL,
+    methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'],
     credentials: true,
     allowedHeaders: ['Content-Type', 'Authorization']
 }));
@@ -19,7 +20,7 @@ app.use(cors({
 app.use(cookieParser())
 app.use(bodyParser.json({limit: "16kb"}))
 app.use(bodyParser.urlencoded({extended: true, limit: "16kb"}))
-//app.use(upload.array())
+
 
 
 //import route
@@ -42,19 +43,22 @@ app.use("/api/v1/video",videoRouter)
 
 
 
-//centralized Error handling
-//app.use((err,req,res,next) =>{
-    //if(err instanceof ApiError){
-        //res.status(err.statusCode).json({
-            //success:err.success,
-            //message:err.message,
-            //errors:err.errors
-        //})
-    //}else {
-        //res.status(500).json({
-            //success:false,
-            //message: "internal Server Error"
-        //})
-    //}
-//}) 
+
+app.use((err, req, res, next) => {
+  if (err instanceof ApiError) {
+    return res.status(err.statusCode).json({
+      success: err.success || false,
+      message: err.message,
+      errors: err.errors || [],
+      data: err.data || null,
+    });
+  }
+
+  console.error(err);
+  return res.status(500).json({
+    success: false,
+    message: "Internal Server Error",
+  });
+});
+
 export {app}

@@ -47,10 +47,7 @@ const checkCookie = asyncHandler(async(req,res)=>{
 })
 
 const registerUser= asyncHandler(async(req,res)=>{
-    //ask data from user
-    //check that no field in is empty
-    //if empty throw apiError
-    //check that if the user is already existi
+    
 
     const {fullName,userName,email,password} = req.body
     const userDetail={}
@@ -71,18 +68,12 @@ const registerUser= asyncHandler(async(req,res)=>{
 
     //console.log(req.files)
 
-    const coverPicPath = req.files.coverPic[0]?.path
-    if(!coverPicPath){
-        throw new ApiError(404,"CoverPath has been not Found") 
-    }
+    const coverPicPath = req.files?.coverPic?.[0]?.path || null;
+    const profilePicPath = req.files?.profilePic?.[0]?.path || null;
 
-    const profilePicPath = req.files.profilePic[0]?.path
-    if(!profilePicPath){
-        throw new ApiError(404,"ProfilePath has been not found")
-    }
 
-    const coverImage= await uploadOnCloudinary(coverPicPath)
-    const profileImage = await uploadOnCloudinary(profilePicPath)
+    const coverImage= coverPicPath? await uploadOnCloudinary(coverPicPath):null
+    const profileImage = profilePicPath? await uploadOnCloudinary(profilePicPath):null
 
     if(coverImage){
         userDetail.coverPic=coverImage.secure_url
@@ -120,12 +111,7 @@ const registerUser= asyncHandler(async(req,res)=>{
 
 
 const loginUser = asyncHandler(async(req,res)=>{
-    //take data from client
-    //check if username or email exist
-    //find user using username or email
-    //check if password from client and password in user match
-    //create refresh token and access token
-    //create a user without password and refresh token to send to client end
+    
 
 
     const {userName,email,password} = req.body
@@ -160,17 +146,18 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const option = {
         httpOnly: true,
-        secure: true
+        secure: true,
+        sameSite:"strict"
     }
 
     return res
-    .status(201)
+    .status(200)
     .cookie("refreashToken",RefreashToken,option)
     .cookie("accessToken",AccessToken,option)
     .json(
         new ApiResponse(200,
             {
-                user:loggedInUser,RefreashToken,AccessToken
+                user:loggedInUser
             },
 
             "User logged in successfully"
@@ -180,21 +167,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 
 })
 
-//ekhon banabo logout user
-//tar agey ami kahini ta boli shob kisu kivabe kaj korbe
-//jokhon ami log in korlam ami amar userId cookie hishebe pathailam
-//then next ami log in thaka obosthay update delete jai korte jai ekta checking middleware hoye ashte hobe
-//ei middleware er kaj ki hobe ta ebar bojhar try kori
-//req.cookie theke cookie access korte parbo 
-//cookie te thakbe accesstoken
-//accesstoken e thakbe user information like userid
-//then user information req object er shathe add kore pathaia dibo
-///ekhon dhoro cookie te access token nai othoba expire hoye gelo
-///then refreash token use kore notun access token banano jabe
-///but jodi access token refreash token kisui na thake tahole user er notun kore log in kora lagbe
 
-
-//log out korte gele amar database theke refreash token delete korte hobe, cookie the access token refreash token duitai delete korte hobe
 
 const logoutUser = asyncHandler(async(req,res)=>{
     const user = req.user
@@ -227,52 +200,48 @@ const logoutUser = asyncHandler(async(req,res)=>{
 
 })
 
-//ekhon jeta banabo ta holo refresh access token
-//refreash access token er concept ta ki ta agey bojha dorkar 
-//amra access token use kori user logged in kina janar jonno
-//but kahini hoilo access token short lived  and refreash token long lived
-//to amra refreash token use koira access token refreash korbo
 
-const refreashAccessToken = asyncHandler(async(req,res)=>{
-    const token = req.cookies?.refreashToken 
-    
-    if(!token){
-         throw new ApiError(401,"You are not logged in")
-    }
 
-    const decodedToken = jwt.decode(token)
+const refreashAccessToken = asyncHandler(async (req, res) => {
+  const token = req.cookies?.refreshToken;
 
-    if((decodedToken?.exp*1000 - Date.now())/1000 < 0){
-        throw new ApiError(401,"login again") 
-    }
+  if (!token) {
+    throw new ApiError(401, "You are not logged in");
+  }
 
-    const user = await User.findById(decodedToken?._id)
+  let decodedToken;
+  try {
+    decodedToken = jwt.verify(token, process.env.REFRESH_TOKEN_SECRET);
+  } catch (err) {
+    throw new ApiError(401, "Invalid or expired refresh token");
+  }
 
-    if (!user) {
-        throw new ApiError(401, "Invalid refresh token")
-    }
-    const options = {
-        httpOnly: true,
-        secure: true
-    }
+  const user = await User.findById(decodedToken?._id);
+  if (!user) {
+    throw new ApiError(401, "Invalid refresh token");
+  }
 
-    const {RefreashToken,AccessToken} = await generateAccessTokenAndRefreashToken(user._id)
+  const { refreshToken, accessToken } =
+    await generateAccessTokenAndRefreashToken(user._id);
 
-    console.log(AccessToken)
+  const options = {
+    httpOnly: true,
+    secure: process.env.NODE_ENV === "production",
+    sameSite: "strict",
+  };
 
-    return res
+  return res
     .status(200)
-    .cookie("accessToken", AccessToken, options)
-    .cookie("refreshToken", RefreashToken, options)
+    .cookie("accessToken", accessToken, options)
+    .cookie("refreshToken", refreshToken, options)
     .json(
-        new ApiResponse(
-            200, 
-            {AccessToken, RefreashToken},
-            "Access token refreshed"
-        )
-    )
-
-})
+      new ApiResponse(
+        200,
+        { accessToken, refreshToken },
+        "Access token refreshed"
+      )
+    );
+});
 
 
 const changeCurrentPassword = asyncHandler(async(req,res)=>{
@@ -313,37 +282,30 @@ const getCurrentUser = asyncHandler(async(req,res)=>{
     )
 })
 
-const updateCurrentUser = asyncHandler(async(req,res)=>{
+const updateCurrentUser = asyncHandler(async (req, res) => {
+  const { userName, email, fullName, bio } = req.body;
 
-    const {userName,email} = req.body
+  if (!(userName || email || fullName || bio)) {
+    throw new ApiError(400, "Empty update field request");
+  }
 
-    if(!(userName || email)){
-        throw new ApiError(400,"Empty update field request")
-    }
+  const updateFields = {};
+  if (userName) updateFields.userName = userName;
+  if (email) updateFields.email = email;
+  if (fullName) updateFields.fullName = fullName;
+  if (bio) updateFields.bio = bio;
 
-    const updateFields = {};
-    if (userName) {
-        updateFields.userName = userName;
-    }
-    if (email) {
-        updateFields.email = email;
-    }
+  const updatedUser = await User.findByIdAndUpdate(
+    req.user?._id,
+    { $set: updateFields },
+    { new: true }
+  ).select("-password -refreashToken");
 
-    
+  return res
+    .status(200)
+    .json(new ApiResponse(200, updatedUser, "User is updated successfully"));
+});
 
-    const updatedUser = await User.findByIdAndUpdate(req.user?._id,{
-        $set:updateFields
-    },{
-        new:true
-    }).select("-password -refreashToken")
-
-    console.log(updatedUser)
-
-    
-    return res.status(200).json(
-        new ApiResponse(200,updatedUser,"User is updated successfully")
-    )
-})
 
 const getCurrentChannelProfile = asyncHandler(async(req,res)=>{
     const {username} = req.params
@@ -398,7 +360,8 @@ const getCurrentChannelProfile = asyncHandler(async(req,res)=>{
             $project:{
                 fullName:1,
                 userName:1,
-                email:1,
+                profilePic:1,
+                coverPic:1,
                 subscribersCount:1,
                 subscribedToCount:1,
                 isSubscribed:1
@@ -412,7 +375,7 @@ const getCurrentChannelProfile = asyncHandler(async(req,res)=>{
         throw new ApiError(404,"User channel is not exist")
     }
 
-    //console.log(channel)
+    console.log(channel)
 
     res
     .status(200)
@@ -445,8 +408,8 @@ const getWatchHistory = asyncHandler(async(req, res) => {
                                 {
                                     $project: {
                                         fullName: 1,
-                                        username: 1,
-                                        avatar: 1
+                                        userName: 1,
+                                        
                                     }
                                 }
                             ]
@@ -478,7 +441,7 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 const updateProfilePic= asyncHandler(async(req,res)=>{
     const userId = req.user._id
 
-    const profilePicPath = req.files.profilePic[0]?.path
+    const profilePicPath = req.file?.path
 
     if(!profilePicPath){
         throw new ApiError(400,"FilePath is needed")
@@ -500,8 +463,8 @@ const updateProfilePic= asyncHandler(async(req,res)=>{
         cloudinary.uploader.destroy(user.profilePicId)
     }
 
-    user.profilePic=profilePic.public_url
-    user.profilePicId=profilePic.public_id
+    user.profilePic=profilePic?.secure_url
+    user.profilePicId=profilePic?.public_id
 
     const updatedUser = await user.save()
 
@@ -515,7 +478,7 @@ const updateProfilePic= asyncHandler(async(req,res)=>{
 const updateCoverPic= asyncHandler(async(req,res)=>{
     const userId = req.user._id
 
-    const coverPicPath = req.files.coverPic[0]?.path
+    const coverPicPath = req.file?.path
 
     if(!coverPicPath){
         throw new ApiError(400,"FilePath is needed")
@@ -537,7 +500,7 @@ const updateCoverPic= asyncHandler(async(req,res)=>{
         cloudinary.uploader.destroy(user.coverPicId)
     }
 
-    user.coverPic=coverPic.public_url
+    user.coverPic=coverPic.secure_url
     user.coverPicId= coverPic.public_id
 
     await user.save()

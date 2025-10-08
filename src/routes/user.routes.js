@@ -17,6 +17,7 @@ import { refreashAccessToken } from "../controllers/user.controller.js"
 import { getCurrentChannelProfile } from "../controllers/user.controller.js"
 import { updateProfilePic} from "../controllers/user.controller.js";
 import { updateCoverPic } from "../controllers/user.controller.js";
+import { getWatchHistory } from "../controllers/user.controller.js";
 
 
 const router=Router()
@@ -46,6 +47,7 @@ router.route("/currentChannelProfile/:username").get(verifyJWT,getCurrentChannel
 router.route("/checkCookies").get(checkCookie)
 router.route("/updateProfilePic").patch(verifyJWT,upload.single("profilePic"),updateProfilePic)
 router.route("/updateCoverPic").patch(verifyJWT,upload.single("coverPic"),updateCoverPic)
+router.route("/getWatchHistory").get(verifyJWT,getWatchHistory)
 
 
 

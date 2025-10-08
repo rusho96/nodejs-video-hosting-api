@@ -3,7 +3,7 @@ import { Router } from "express";
 import { verifyJWT } from "../middlewares/auth.js"
 import { upload } from "../middlewares/multer.js";
 
-//import route
+
 
 import { getAllVideos } from "../controllers/video.controller.js";
 import { publishAVideo } from "../controllers/video.controller.js";
@@ -13,6 +13,7 @@ import { deleteVideo } from "../controllers/video.controller.js";
 import { togglePublishStatus } from "../controllers/video.controller.js";
 import {removeFromWatchHistory} from "../controllers/video.controller.js";
 import {clearWatchHistory} from "../controllers/video.controller.js";
+import { getUserLikedVideos } from "../controllers/video.controller.js";
 
 const videoRouter=Router()
 const uploadFields = upload.fields( 
@@ -35,5 +36,6 @@ videoRouter.route("/deleteVideo/:videoId").delete(verifyJWT,deleteVideo)
 videoRouter.route("/togglePublishStatus/:videoId").get(verifyJWT,togglePublishStatus)
 videoRouter.route("removeFromWatchHistory/:videoId").patch(verifyJWT,removeFromWatchHistory)
 videoRouter.route("clearWatchHistory").delete(verifyJWT,clearWatchHistory) 
+videoRouter.route("/getUserLikedVideos/:userId").get(verifyJWT,getUserLikedVideos)
 
 export default videoRouter 
