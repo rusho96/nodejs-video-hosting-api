@@ -9,7 +9,7 @@ import multer from "multer";
 const app=express();
 
 
-const CLIENT_URL = process.env.CLIENT_URL || "http://localhost:5173";
+const CLIENT_URL = process.env.CLIENT_URL 
 app.use(cors({
     origin:CLIENT_URL,
     methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'],
