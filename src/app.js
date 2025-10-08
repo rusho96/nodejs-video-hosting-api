@@ -10,26 +10,22 @@ const app=express();
 
 
 const allowedOrigins = [
-  'https://video-hosting-react-ikwn5uhth-rusho96s-projects.vercel.app',
-  'https://video-hosting-react-app.vercel.app', 
-  'http://localhost:3000' 
+  'http://localhost:5173', // dev
+  'https://video-hosting-react-app.vercel.app', // production
+  'https://video-hosting-react-ikwn5uhth-rusho96s-projects.vercel.app' // preview
 ];
 
 app.use(cors({
-  origin: function (origin, callback) {
-    
-    if (!origin) return callback(null, true);
-    
-    if (allowedOrigins.indexOf(origin) !== -1) {
-      callback(null, true);
-    } else {
-      callback(new Error('Not allowed by CORS'));
-    }
+  origin: function(origin, callback) {
+    if (!origin) return callback(null, true); // Postman, curl, server requests
+    if (allowedOrigins.includes(origin)) return callback(null, true);
+    callback(new Error('Not allowed by CORS'));
   },
-  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
   credentials: true,
-  allowedHeaders: ['Content-Type', 'Authorization']
+  allowedHeaders: ['Content-Type', 'Authorization'],
+  methods: ['GET','POST','PUT','PATCH','DELETE']
 }));
+
 
 app.use(cookieParser())
 app.use(bodyParser.json({limit: "16kb"}))
