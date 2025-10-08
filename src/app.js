@@ -9,12 +9,26 @@ import multer from "multer";
 const app=express();
 
 
-const CLIENT_URL = process.env.CLIENT_URL 
+const allowedOrigins = [
+  'https://video-hosting-react-ikwn5uhth-rusho96s-projects.vercel.app',
+  'https://video-hosting-react-app.vercel.app', 
+  'http://localhost:3000' 
+];
+
 app.use(cors({
-    origin:CLIENT_URL,
-    methods: ['GET', 'POST', 'PUT','PATCH', 'DELETE'],
-    credentials: true,
-    allowedHeaders: ['Content-Type', 'Authorization']
+  origin: function (origin, callback) {
+    
+    if (!origin) return callback(null, true);
+    
+    if (allowedOrigins.indexOf(origin) !== -1) {
+      callback(null, true);
+    } else {
+      callback(new Error('Not allowed by CORS'));
+    }
+  },
+  methods: ['GET', 'POST', 'PUT', 'PATCH', 'DELETE'],
+  credentials: true,
+  allowedHeaders: ['Content-Type', 'Authorization']
 }));
 
 app.use(cookieParser())
