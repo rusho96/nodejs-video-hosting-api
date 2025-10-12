@@ -146,9 +146,9 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const option = {
         httpOnly: true,
-        secure: true,
-        sameSite:"strict"
-    }
+        secure: process.env.NODE_ENV === "production",   // production এ true হবে
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+    };
 
     return res
     .status(200)
@@ -221,14 +221,14 @@ const refreashAccessToken = asyncHandler(async (req, res) => {
     throw new ApiError(401, "Invalid refresh token");
   }
 
-  const { refreshToken, accessToken } =
-    await generateAccessTokenAndRefreashToken(user._id);
+    const { refreshToken, accessToken } =
+        await generateAccessTokenAndRefreashToken(user._id);
 
-  const options = {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "strict",
-  };
+    const option = {
+        httpOnly: true,
+        secure: process.env.NODE_ENV === "production",
+        sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
+    };
 
   return res
     .status(200)

@@ -10,14 +10,14 @@ const app=express();
 
 
 const allowedOrigins = [
-  'http://localhost:5173', // dev
-  'https://video-hosting-react-app.vercel.app', // production
-  'https://video-hosting-react-ikwn5uhth-rusho96s-projects.vercel.app' // preview
+  'http://localhost:5173', 
+  'https://video-hosting-react-app.vercel.app', 
+  'https://video-hosting-react-ikwn5uhth-rusho96s-projects.vercel.app' 
 ];
 
 app.use(cors({
   origin: function(origin, callback) {
-    if (!origin) return callback(null, true); // Postman, curl, server requests
+    if (!origin) return callback(null, true); 
     if (allowedOrigins.includes(origin)) return callback(null, true);
     callback(new Error('Not allowed by CORS'));
   },
