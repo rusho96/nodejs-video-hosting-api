@@ -308,7 +308,9 @@ const removeFromWatchHistory = asyncHandler(async (req, res) => {
     const { videoId } = req.params
     const userId = req.user._id
 
-    const user = await findByIdAndUpdate(
+    console.log(videoId,userId)
+
+    const user = await User.findByIdAndUpdate(
         userId,
         { $pull: { watchHistory: videoId } },
         { new: true }
@@ -318,7 +320,7 @@ const removeFromWatchHistory = asyncHandler(async (req, res) => {
         throw new ApiError(404, "User is not found")
     }
 
-    return res.stutus(200).json(
+    return res.status(200).json(
         new ApiResponse(200, user, "Video is removed from watchHistory")
     )
 })
@@ -326,7 +328,7 @@ const removeFromWatchHistory = asyncHandler(async (req, res) => {
 const clearWatchHistory = asyncHandler(async (req, res) => {
     const userId = req.user._id
 
-    const user = await findByIdAndUpdate(
+    const user = await User.findByIdAndUpdate(
         userId,
         { watchHistory: [] },
         { new: true }

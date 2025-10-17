@@ -138,7 +138,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const {RefreashToken,AccessToken} = await generateAccessTokenAndRefreashToken(user._id)
 
-    console.log(RefreashToken,AccessToken)
+    //console.log(RefreashToken,AccessToken)
     
     const loggedInUser= await User.findById(user._id).select(
         "-password -refreashToken"
@@ -146,7 +146,7 @@ const loginUser = asyncHandler(async(req,res)=>{
 
     const option = {
         httpOnly: true,
-        secure: process.env.NODE_ENV === "production",   // production এ true হবে
+        secure: process.env.NODE_ENV === "production",   
         sameSite: process.env.NODE_ENV === "production" ? "none" : "lax"
     };
 
@@ -232,8 +232,8 @@ const refreashAccessToken = asyncHandler(async (req, res) => {
 
   return res
     .status(200)
-    .cookie("accessToken", accessToken, options)
-    .cookie("refreshToken", refreshToken, options)
+    .cookie("accessToken", accessToken, option)
+    .cookie("refreshToken", refreshToken, option)
     .json(
       new ApiResponse(
         200,

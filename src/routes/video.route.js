@@ -34,8 +34,8 @@ videoRouter.route("/getVideoById/:videoId").get(verifyJWT,getVideoById)
 videoRouter.route("/updateVideo/:videoId").put(verifyJWT,upload.single('thumbnail'),updateVideo)
 videoRouter.route("/deleteVideo/:videoId").delete(verifyJWT,deleteVideo)
 videoRouter.route("/togglePublishStatus/:videoId").get(verifyJWT,togglePublishStatus)
-videoRouter.route("removeFromWatchHistory/:videoId").patch(verifyJWT,removeFromWatchHistory)
-videoRouter.route("clearWatchHistory").delete(verifyJWT,clearWatchHistory) 
+videoRouter.route("/removeFromWatchHistory/:videoId").patch(verifyJWT,removeFromWatchHistory)
+videoRouter.route("/clearWatchHistory").delete(verifyJWT,clearWatchHistory) 
 videoRouter.route("/getUserLikedVideos/:userId").get(verifyJWT,getUserLikedVideos)
 
 export default videoRouter 

@@ -28,25 +28,46 @@ const getVideoComment = asyncHandler(async(req,res)=>{
     }
     
     //console.log(videoId)
-    const videoComment = await Comment.aggregate(
-        [
-            {
-                $match: {
-                    video: new mongoose.Types.ObjectId(videoId)
-                }
-            },
-            {
-                $sort:{updatedAt:1}
-            },
-            {
-                $skip:skipComment
-            },
-            {
-                $limit:commentLimit
+    const videoComment = await Comment.aggregate([
+        {
+            $match: {
+                video: new mongoose.Types.ObjectId(videoId)
             }
-        
-        ]
-    )
+        },
+        {
+            $sort: { updatedAt: 1 }
+        },
+        {
+            $lookup: {
+                from: "users",
+                localField: "owner",
+                foreignField: "_id",
+                as: "owner"
+            }
+        },
+        {
+            $unwind: {
+                path: "$owner",
+                preserveNullAndEmptyArrays: true
+            }
+        },
+        {
+            $project: {
+                content: 1,
+                updatedAt: 1,
+                createdAt: 1,
+                "owner.userName": 1,
+                "owner.profilePic": 1,
+                "owner._id": 1
+            }
+        },
+        {
+            $skip: skipComment
+        },
+        {
+            $limit: commentLimit
+        }
+    ]);
 
     
 
