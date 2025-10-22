@@ -109,21 +109,22 @@ const publishAVideo = asyncHandler(async (req, res) => {
     
 
     
-    const videoFilePath = req.files?.videoFile?.[0]?.path;
-    if (!videoFilePath) {
-        throw new ApiError(400, "videofilePath is required");
+    const videoBuffer = req.files?.videoFile?.[0]?.buffer
+    if (!videoBuffer) {
+        throw new ApiError(400, "videoBuffer is required");
     }
-
     
-    const thumbnailPath = req.files?.thumbnail?.[0]?.path;
-
+    console.log(req.files?.videoFile)
     
-    const videoFile = await uploadOnCloudinary(videoFilePath);
+    const thumbnailBuffer = req.files?.thumbnail?.[0]?.buffer;
+
+    console.log(thumbnailBuffer)
+    const videoFile = await uploadOnCloudinary(videoBuffer,"videos");
 
     
     let thumbnail = null;
-    if (thumbnailPath) {
-        thumbnail = await uploadOnCloudinary(thumbnailPath);
+    if (thumbnailBuffer) {
+        thumbnail = await uploadOnCloudinary(thumbnailBuffer,"thumbnails");
     }
 
     const duration = Number(videoFile.duration)?.toFixed(2) || 0;
@@ -214,14 +215,14 @@ const updateVideo = asyncHandler(async (req, res) => {
     }
 
     
-    const newThumbnailPath = req.file?.path;
-    console.log(newThumbnailPath)
-    if (newThumbnailPath) {
+    const newThumbnailBuffer = req.file?.buffer;
+    console.log(newThumbnailBuffer)
+    if (newThumbnailBuffer) {
         if (video.thumbnailId) {
             await cloudinary.uploader.destroy(video.thumbnailId);
         }
 
-        const newThumbnail = await uploadOnCloudinary(newThumbnailPath);
+        const newThumbnail = await uploadOnCloudinary(newThumbnailBuffer,"thumbnails");
         console.log(newThumbnail)
 
         if (newThumbnail) {

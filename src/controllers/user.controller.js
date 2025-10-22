@@ -441,13 +441,13 @@ const getWatchHistory = asyncHandler(async(req, res) => {
 const updateProfilePic= asyncHandler(async(req,res)=>{
     const userId = req.user._id
 
-    const profilePicPath = req.file?.path
+    const profilePicBuffer = req.file?.buffer
 
-    if(!profilePicPath){
+    if(!profilePicBuffer){
         throw new ApiError(400,"FilePath is needed")
     }
 
-    const profilePic= await uploadOnCloudinary(profilePicPath)
+    const profilePic= await uploadOnCloudinary(profilePicBuffer,"profilPics")
 
     if(!profilePic){
         throw new ApiError(400,"File isn't created")
@@ -478,13 +478,13 @@ const updateProfilePic= asyncHandler(async(req,res)=>{
 const updateCoverPic= asyncHandler(async(req,res)=>{
     const userId = req.user._id
 
-    const coverPicPath = req.file?.path
+    const coverPicBuffer = req.file?.buffer
 
-    if(!coverPicPath){
+    if(!coverPicBuffer){
         throw new ApiError(400,"FilePath is needed")
     }
 
-    const coverPic = await uploadOnCloudinary(coverPicPath)
+    const coverPic = await uploadOnCloudinary(coverPicBuffer,"coverPics")
 
     if(!coverPic){
         throw new ApiError(400,"File is not created")
